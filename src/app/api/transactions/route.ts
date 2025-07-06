@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { Transaction } from "@/types";
 import { ObjectId } from "mongodb";
+import { Transaction } from "@/types";
 
 export async function GET() {
   try {
     const db = await connectDB();
-    const transactions = await db
-      .collection<Transaction>("transactions")
-      .find({})
-      .toArray();
+    const transactions = await db.collection("transactions").find({}).toArray();
     return NextResponse.json({ transactions });
   } catch (error) {
     console.error("Error fetching transactions:", error);
@@ -24,18 +21,14 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const db = await connectDB();
-    const data: Omit<Transaction, "_id"> = await request.json();
-    const result = await db
-      .collection<Transaction>("transactions")
-      .insertOne({
-        ...data,
-        date: new Date().toISOString(),
-      });
-
+    const data = await request.json();
+    const result = await db.collection("transactions").insertOne({
+      ...data,
+      createdAt: new Date().toISOString(),
+    });
     const transaction = await db
-      .collection<Transaction>("transactions")
+      .collection("transactions")
       .findOne({ _id: result.insertedId });
-
     return NextResponse.json(transaction);
   } catch (error) {
     console.error("Error adding transaction:", error);
@@ -50,7 +43,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const db = await connectDB();
-    const { _id, ...data }: Transaction = await request.json();
+    const { _id, ...data } = await request.json();
 
     if (!_id || typeof _id !== "string") {
       return NextResponse.json(
@@ -59,13 +52,13 @@ export async function PUT(request: Request) {
       );
     }
 
-    await db.collection<Transaction>("transactions").updateOne(
+    await db.collection("transactions").updateOne(
       { _id: new ObjectId(_id) },
       { $set: { ...data, updatedAt: new Date().toISOString() } }
     );
 
     const updatedTransaction = await db
-      .collection<Transaction>("transactions")
+      .collection("transactions")
       .findOne({ _id: new ObjectId(_id) });
 
     return NextResponse.json({
@@ -95,7 +88,7 @@ export async function DELETE(request: Request) {
     }
 
     const result = await db
-      .collection<Transaction>("transactions")
+      .collection("transactions")
       .deleteOne({ _id: new ObjectId(_id) });
 
     if (result.deletedCount === 0) {
