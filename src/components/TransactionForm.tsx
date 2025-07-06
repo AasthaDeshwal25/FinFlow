@@ -12,7 +12,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { categories } from "@/data/categories";
 import { useEffect } from "react";
 
@@ -31,7 +37,11 @@ interface TransactionFormProps {
   onCancel?: () => void;
 }
 
-export default function TransactionForm({ defaultValues, onSubmit, onCancel }: TransactionFormProps) {
+export default function TransactionForm({
+  defaultValues,
+  onSubmit,
+  onCancel,
+}: TransactionFormProps) {
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: defaultValues || {
@@ -42,7 +52,6 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel }: T
     },
   });
 
-  
   useEffect(() => {
     if (defaultValues) {
       form.reset(defaultValues);
@@ -67,7 +76,10 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel }: T
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 max-w-md mx-auto p-4">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-4 max-w-md mx-auto p-4"
+      >
         <FormField
           control={form.control}
           name="amount"
@@ -127,7 +139,10 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel }: T
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger className="border-emerald-600 focus:ring-emerald-700">
                     <SelectValue placeholder="Select a category" />
@@ -135,8 +150,11 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel }: T
                 </FormControl>
                 <SelectContent>
                   {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
+                    <SelectItem
+                      key={category.id}
+                      value={category.id}
+                    >
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
