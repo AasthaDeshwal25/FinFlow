@@ -1,0 +1,135 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import TransactionForm from "@/components/TransactionForm";
+import TransactionList from "@/components/TransactionList";
+import { Transaction } from "@/types";
+
+export default function TransactionsPage() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/transactions");
+      const data = await response.json();
+      console.log("API Response:", data);
+      setTransactions(Array.isArray(data.transactions) ? data.transactions : []);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      setTransactions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (data: any) => {
+    try {
+      let response;
+      if (editingTransaction) {
+        response = await fetch("/api/transactions", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ _id: editingTransaction._id, ...data }),
+        });
+      } else {
+        response = await fetch("/api/transactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+      }
+      
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to save transaction");
+      
+      // Clear editing state
+      setEditingTransaction(null);
+      
+      // Refresh the transaction list immediately
+      await fetchTransactions();
+      
+      // Show success message
+      alert(editingTransaction ? "Transaction updated successfully!" : "Transaction added successfully!");
+    } catch (error) {
+      console.error("Error saving transaction:", error);
+      alert(`Failed to save transaction: ${error.message}`);
+    }
+  };
+
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    // Scroll to top where the form is
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTransaction(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this transaction?")) {
+      try {
+        const response = await fetch("/api/transactions", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ _id: id }),
+        });
+        
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Failed to delete transaction");
+        
+        // Refresh the transaction list immediately
+        await fetchTransactions();
+        
+        // Show success message
+        alert("Transaction deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting transaction:", error);
+        alert(`Failed to delete transaction: ${error.message}`);
+      }
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold text-emerald-700 mb-4">Transactions</h1>
+      
+      {editingTransaction && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h2 className="text-lg font-semibold text-blue-800 mb-2">Edit Transaction</h2>
+        </div>
+      )}
+      
+      <TransactionForm
+        defaultValues={editingTransaction ? {
+          amount: editingTransaction.amount,
+          date: editingTransaction.date,
+          description: editingTransaction.description,
+          category: editingTransaction.category,
+        } : undefined}
+        onSubmit={handleSubmit}
+        onCancel={editingTransaction ? handleCancelEdit : undefined}
+      />
+      
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold text-emerald-700 mb-4">Transaction History</h2>
+        {isLoading ? (
+          <div className="text-center py-4">Loading transactions...</div>
+        ) : (
+          <TransactionList 
+            transactions={transactions} 
+            onEdit={handleEdit} 
+            onDelete={handleDelete} 
+          />
+        )}
+      </div>
+    </div>
+  );
+}
