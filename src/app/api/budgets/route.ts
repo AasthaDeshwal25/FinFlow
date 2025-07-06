@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { Budget } from "@/types";
+import { ObjectId } from "mongodb";
 
 export async function GET() {
   try {
@@ -36,18 +37,24 @@ export async function PUT(request: Request) {
   try {
     const db = await connectDB();
     const { _id, ...data }: Budget = await request.json();
-    
+
+    if (!_id) {
+      return NextResponse.json({ error: "Missing _id" }, { status: 400 });
+    }
+
+    const objectId = new ObjectId(_id);
+
     // Update with timestamp
     const updateData = {
       ...data,
       updatedAt: new Date().toISOString(),
     };
-    
+
     await db.collection("budgets").updateOne(
-      { _id }, 
+      { _id: objectId },
       { $set: updateData }
     );
-    
+
     return NextResponse.json({ message: "Budget updated successfully" });
   } catch (error) {
     console.error("Error updating budget:", error);
@@ -59,13 +66,19 @@ export async function DELETE(request: Request) {
   try {
     const db = await connectDB();
     const { _id } = await request.json();
-    
-    const result = await db.collection("budgets").deleteOne({ _id });
-    
+
+    if (!_id) {
+      return NextResponse.json({ error: "Missing _id" }, { status: 400 });
+    }
+
+    const objectId = new ObjectId(_id);
+
+    const result = await db.collection("budgets").deleteOne({ _id: objectId });
+
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: "Budget not found" }, { status: 404 });
     }
-    
+
     return NextResponse.json({ message: "Budget deleted successfully" });
   } catch (error) {
     console.error("Error deleting budget:", error);
