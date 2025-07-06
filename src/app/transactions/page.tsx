@@ -45,28 +45,26 @@ export default function TransactionsPage() {
           body: JSON.stringify(data),
         });
       }
-      
+
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to save transaction");
-      
-      // Clear editing state
+
       setEditingTransaction(null);
-      
-      // Refresh the transaction list immediately
       await fetchTransactions();
-      
-      // Show success message
       alert(editingTransaction ? "Transaction updated successfully!" : "Transaction added successfully!");
     } catch (error) {
       console.error("Error saving transaction:", error);
-      alert(`Failed to save transaction: ${error.message}`);
+      if (error instanceof Error) {
+        alert(`Failed to save transaction: ${error.message}`);
+      } else {
+        alert("Failed to save transaction: An unknown error occurred.");
+      }
     }
   };
 
   const handleEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
-    // Scroll to top where the form is
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancelEdit = () => {
@@ -81,18 +79,19 @@ export default function TransactionsPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ _id: id }),
         });
-        
+
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Failed to delete transaction");
-        
-        // Refresh the transaction list immediately
+
         await fetchTransactions();
-        
-        // Show success message
         alert("Transaction deleted successfully!");
       } catch (error) {
         console.error("Error deleting transaction:", error);
-        alert(`Failed to delete transaction: ${error.message}`);
+        if (error instanceof Error) {
+          alert(`Failed to delete transaction: ${error.message}`);
+        } else {
+          alert("Failed to delete transaction: An unknown error occurred.");
+        }
       }
     }
   };
@@ -100,33 +99,37 @@ export default function TransactionsPage() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold text-emerald-700 mb-4">Transactions</h1>
-      
+
       {editingTransaction && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h2 className="text-lg font-semibold text-blue-800 mb-2">Edit Transaction</h2>
         </div>
       )}
-      
+
       <TransactionForm
-        defaultValues={editingTransaction ? {
-          amount: editingTransaction.amount,
-          date: editingTransaction.date,
-          description: editingTransaction.description,
-          category: editingTransaction.category,
-        } : undefined}
+        defaultValues={
+          editingTransaction
+            ? {
+                amount: editingTransaction.amount,
+                date: editingTransaction.date,
+                description: editingTransaction.description,
+                category: editingTransaction.category,
+              }
+            : undefined
+        }
         onSubmit={handleSubmit}
         onCancel={editingTransaction ? handleCancelEdit : undefined}
       />
-      
+
       <div className="mt-8">
         <h2 className="text-xl font-semibold text-emerald-700 mb-4">Transaction History</h2>
         {isLoading ? (
           <div className="text-center py-4">Loading transactions...</div>
         ) : (
-          <TransactionList 
-            transactions={transactions} 
-            onEdit={handleEdit} 
-            onDelete={handleDelete} 
+          <TransactionList
+            transactions={transactions}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         )}
       </div>
