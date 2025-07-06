@@ -13,10 +13,14 @@ export default function AddTransactionPage() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to add transaction");
       alert("Transaction added successfully! Redirecting...");
-      window.location.href = "/transactions"; // Redirect to the transactions page
+      window.location.href = "/transactions";
     } catch (error) {
       console.error("Error adding transaction:", error);
-      alert(`Failed to add transaction: ${error.message}`);
+      if (error instanceof Error) {
+        alert(`Failed to add transaction: ${error.message}`);
+      } else {
+        alert("Failed to add transaction due to an unknown error.");
+      }
     }
   };
 
