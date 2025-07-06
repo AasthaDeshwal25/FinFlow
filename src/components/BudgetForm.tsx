@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PiggyBank, DollarSign, Target, TrendingUp } from 'lucide-react';
-import { categories } from '@/data/categories';
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PiggyBank, DollarSign, Target, TrendingUp } from "lucide-react";
+import { categories } from "@/data/categories";
 
 interface Budget {
   id: string;
   category: string;
   amount: number;
-  period: 'monthly' | 'yearly';
+  period: "monthly" | "yearly";
   createdAt: string;
 }
 
 export default function BudgetForm() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [formData, setFormData] = useState({
-    category: '',
-    amount: '',
-    period: 'monthly' as 'monthly' | 'yearly'
+    category: "",
+    amount: "",
+    period: "monthly" as "monthly" | "yearly",
   });
   const [loading, setLoading] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
@@ -33,11 +33,11 @@ export default function BudgetForm() {
 
   const fetchBudgets = async () => {
     try {
-      const response = await fetch('/api/budgets');
+      const response = await fetch("/api/budgets");
       const data = await response.json();
       setBudgets(data);
     } catch (error) {
-      console.error('Error fetching budgets:', error);
+      console.error("Error fetching budgets:", error);
     }
   };
 
@@ -46,14 +46,12 @@ export default function BudgetForm() {
     setLoading(true);
 
     try {
-      const url = editingBudget ? `/api/budgets/${editingBudget.id}` : '/api/budgets';
-      const method = editingBudget ? 'PUT' : 'POST';
+      const url = editingBudget ? `/api/budgets/${editingBudget.id}` : "/api/budgets";
+      const method = editingBudget ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           amount: parseFloat(formData.amount),
@@ -62,13 +60,13 @@ export default function BudgetForm() {
 
       if (response.ok) {
         fetchBudgets();
-        setFormData({ category: '', amount: '', period: 'monthly' });
+        setFormData({ category: "", amount: "", period: "monthly" });
         setEditingBudget(null);
       } else {
-        alert('Error saving budget');
+        alert("Error saving budget");
       }
     } catch (error) {
-      alert('Error saving budget');
+      alert("Error saving budget");
     } finally {
       setLoading(false);
     }
@@ -79,42 +77,39 @@ export default function BudgetForm() {
     setFormData({
       category: budget.category,
       amount: budget.amount.toString(),
-      period: budget.period
+      period: budget.period,
     });
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this budget?')) return;
+    if (!confirm("Are you sure you want to delete this budget?")) return;
 
     try {
-      const response = await fetch(`/api/budgets/${id}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`/api/budgets/${id}`, { method: "DELETE" });
       if (response.ok) {
         fetchBudgets();
       } else {
-        alert('Error deleting budget');
+        alert("Error deleting budget");
       }
     } catch (error) {
-      alert('Error deleting budget');
+      alert("Error deleting budget");
     }
   };
 
   const getCategoryName = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId);
+    const category = categories.find((c) => c.id === categoryId);
     return category ? category.name : categoryId;
   };
 
   const getCategoryColor = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId);
-    return category ? category.color : 'bg-gray-500';
+    const category = categories.find((c) => c.id === categoryId);
+    return category ? category.color : "bg-gray-500";
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -125,7 +120,7 @@ export default function BudgetForm() {
         <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
           <CardTitle className="flex items-center gap-2">
             <PiggyBank className="w-5 h-5" />
-            {editingBudget ? 'Edit Budget' : 'Set Budget'}
+            {editingBudget ? "Edit Budget" : "Set Budget"}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -133,9 +128,9 @@ export default function BudgetForm() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Select 
-                  value={formData.category} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
@@ -144,7 +139,7 @@ export default function BudgetForm() {
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         <span className="flex items-center gap-2">
-                          <span className={`w-3 h-3 rounded-full ${category.color}`}></span>
+                          <span className={`w-3 h-3 rounded-full ${category.color}`} />
                           {category.name}
                         </span>
                       </SelectItem>
@@ -163,7 +158,7 @@ export default function BudgetForm() {
                     step="0.01"
                     placeholder="0.00"
                     value={formData.amount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, amount: e.target.value }))}
                     className="pl-10"
                     required
                   />
@@ -172,9 +167,9 @@ export default function BudgetForm() {
 
               <div className="space-y-2">
                 <Label htmlFor="period">Period</Label>
-                <Select 
-                  value={formData.period} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, period: value as 'monthly' | 'yearly' }))}
+                <Select
+                  value={formData.period}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, period: value as "monthly" | "yearly" }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select period" />
@@ -194,18 +189,14 @@ export default function BudgetForm() {
                   variant="outline"
                   onClick={() => {
                     setEditingBudget(null);
-                    setFormData({ category: '', amount: '', period: 'monthly' });
+                    setFormData({ category: "", amount: "", period: "monthly" });
                   }}
                 >
                   Cancel
                 </Button>
               )}
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {loading ? 'Saving...' : editingBudget ? 'Update Budget' : 'Set Budget'}
+              <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+                {loading ? "Saving..." : editingBudget ? "Update Budget" : "Set Budget"}
               </Button>
             </div>
           </form>
@@ -235,7 +226,7 @@ export default function BudgetForm() {
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border"
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-4 h-4 rounded-full ${getCategoryColor(budget.category)}`}></div>
+                    <div className={`w-4 h-4 rounded-full ${getCategoryColor(budget.category)}`} />
                     <div>
                       <h3 className="font-medium">{getCategoryName(budget.category)}</h3>
                       <p className="text-sm text-gray-600 capitalize">{budget.period} budget</p>
@@ -245,15 +236,11 @@ export default function BudgetForm() {
                     <div className="text-right">
                       <p className="font-semibold text-lg">{formatCurrency(budget.amount)}</p>
                       <p className="text-sm text-gray-600">
-                        {budget.period === 'monthly' ? 'per month' : 'per year'}
+                        {budget.period === "monthly" ? "per month" : "per year"}
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(budget)}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(budget)}>
                         Edit
                       </Button>
                       <Button

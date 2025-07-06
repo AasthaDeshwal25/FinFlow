@@ -15,7 +15,11 @@ interface TransactionListProps {
   onDelete: (id: string) => void;
 }
 
-export default function TransactionList({ transactions, onEdit, onDelete }: TransactionListProps) {
+export default function TransactionList({
+  transactions,
+  onEdit,
+  onDelete,
+}: TransactionListProps) {
   return (
     <div className="p-4">
       <Table>
@@ -37,12 +41,17 @@ export default function TransactionList({ transactions, onEdit, onDelete }: Tran
             </TableRow>
           ) : (
             transactions.map((transaction) => (
-              <TableRow key={transaction._id}>
-                <TableCell>{new Date(transaction.date).toLocaleDateString("en-IN")}</TableCell>
+              <TableRow key={transaction._id ?? transaction.id}>
                 <TableCell>
-                  {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
-                    transaction.amount
-                  )}
+                  {transaction.date
+                    ? new Date(transaction.date).toLocaleDateString("en-IN")
+                    : "N/A"}
+                </TableCell>
+                <TableCell>
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                  }).format(transaction.amount)}
                 </TableCell>
                 <TableCell>{transaction.description}</TableCell>
                 <TableCell>{transaction.category}</TableCell>
@@ -56,8 +65,16 @@ export default function TransactionList({ transactions, onEdit, onDelete }: Tran
                   </Button>
                   <Button
                     variant="destructive"
-                    className="bg-red-600 hover:bg-red-500"
-                    onClick={() => onDelete(transaction._id)}
+                    onClick={() => {
+                      if (!transaction._id) {
+                        console.error(
+                          "Transaction is missing _id:",
+                          transaction
+                        );
+                        return;
+                      }
+                      onDelete(transaction._id);
+                    }}
                   >
                     Delete
                   </Button>
