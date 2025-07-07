@@ -16,13 +16,8 @@ interface ExpenseChartProps {
 }
 
 export default function ExpenseChart({ transactions = [] }: ExpenseChartProps) {
-  // Convert 'credit' → 'income', 'debit' → 'expense'
-  const converted = transactions.map((t) => ({
-    ...t,
-    type: t.type === "credit" ? "income" : "expense",
-  }));
-
-  const expenseTransactions = converted.filter((t) => t.type === "expense");
+  // Filter for 'debit' transactions only (i.e., expenses)
+  const expenseTransactions = transactions.filter((t) => t.type === "debit");
 
   if (expenseTransactions.length === 0) {
     return (
@@ -32,17 +27,20 @@ export default function ExpenseChart({ transactions = [] }: ExpenseChartProps) {
     );
   }
 
-  const monthlyData = expenseTransactions.reduce((acc, t) => {
+  // Group by month-year and sum the amounts
+  const monthlyData: Record<string, number> = {};
+  for (const t of expenseTransactions) {
     const date = new Date(t.date);
-    const key = date.toLocaleString("en-IN", { month: "short", year: "numeric" });
-    acc[key] = (acc[key] || 0) + t.amount;
-    return acc;
-  }, {} as Record<string, number>);
+    const key = date.toLocaleString("en-IN", { month: "short", year: "numeric" }); // e.g., "Jul 2025"
+    monthlyData[key] = (monthlyData[key] || 0) + t.amount;
+  }
 
+  // Convert grouped data into sorted array
   const chartData = Object.entries(monthlyData)
     .map(([month, amount]) => ({ month, amount }))
     .sort(
-      (a, b) => new Date("1 " + a.month).getTime() - new Date("1 " + b.month).getTime()
+      (a, b) =>
+        new Date("1 " + a.month).getTime() - new Date("1 " + b.month).getTime()
     );
 
   return (
@@ -65,6 +63,7 @@ export default function ExpenseChart({ transactions = [] }: ExpenseChartProps) {
               new Intl.NumberFormat("en-IN", {
                 style: "currency",
                 currency: "INR",
+                maximumFractionDigits: 0,
               }).format(value)
             }
           />
@@ -73,6 +72,7 @@ export default function ExpenseChart({ transactions = [] }: ExpenseChartProps) {
               new Intl.NumberFormat("en-IN", {
                 style: "currency",
                 currency: "INR",
+                maximumFractionDigits: 2,
               }).format(value),
               "Amount",
             ]}
