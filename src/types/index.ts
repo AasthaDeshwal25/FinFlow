@@ -1,4 +1,3 @@
-// src/types/index.ts
 export interface Transaction {
   id: string;
   _id?: string;
@@ -6,10 +5,11 @@ export interface Transaction {
   category: string;
   description: string;
   date: string;
-  type: 'expense' | 'income';
+  type: 'credit' | 'debit'; 
   createdAt?: string;
   updatedAt?: string;
 }
+
 
 export interface Budget {
   id: string;

@@ -22,7 +22,7 @@ export default function BudgetChart({ budgets = [], transactions = [] }: BudgetC
 
   const currentMonthTransactions = transactions.filter(t => {
     const transactionDate = new Date(t.date);
-    return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear && t.type === 'expense';
+    return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear && t.type === 'debit';
   });
 
   const actualSpending = currentMonthTransactions.reduce((acc, t) => {
