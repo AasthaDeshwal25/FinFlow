@@ -19,7 +19,6 @@ export default function TransactionsPage() {
       setIsLoading(true);
       const response = await fetch("/api/transactions");
       const data = await response.json();
-      console.log("API Response:", data);
       setTransactions(Array.isArray(data.transactions) ? data.transactions : []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -115,7 +114,7 @@ export default function TransactionsPage() {
           editingTransaction
             ? {
                 amount: editingTransaction.amount,
-                date: editingTransaction.date,
+                date: new Date(editingTransaction.date), // ✅ FIXED: convert string to Date
                 description: editingTransaction.description,
                 category: editingTransaction.category,
                 type: editingTransaction.type,
@@ -134,11 +133,7 @@ export default function TransactionsPage() {
             <p className="mt-4 text-gray-600">Loading transactions...</p>
           </div>
         ) : (
-          <TransactionList
-            transactions={transactions}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+          c
         )}
       </div>
     </div>
