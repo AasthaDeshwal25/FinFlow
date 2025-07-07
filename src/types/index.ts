@@ -1,4 +1,4 @@
-
+// src/types/index.ts
 export interface Transaction {
   id: string;
   _id?: string;
