@@ -19,6 +19,7 @@ export default function TransactionsPage() {
       setIsLoading(true);
       const response = await fetch("/api/transactions");
       const data = await response.json();
+
       setTransactions(Array.isArray(data.transactions) ? data.transactions : []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -53,11 +54,7 @@ export default function TransactionsPage() {
       alert(editingTransaction ? "Transaction updated successfully!" : "Transaction added successfully!");
     } catch (error) {
       console.error("Error saving transaction:", error);
-      if (error instanceof Error) {
-        alert(`Failed to save transaction: ${error.message}`);
-      } else {
-        alert("Failed to save transaction: An unknown error occurred.");
-      }
+      alert(`Failed to save transaction: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 
@@ -86,13 +83,15 @@ export default function TransactionsPage() {
         alert("Transaction deleted successfully!");
       } catch (error) {
         console.error("Error deleting transaction:", error);
-        if (error instanceof Error) {
-          alert(`Failed to delete transaction: ${error.message}`);
-        } else {
-          alert("Failed to delete transaction: An unknown error occurred.");
-        }
+        alert(`Failed to delete transaction: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
     }
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const iso = date.toISOString();
+    return iso.slice(0, 10); // yyyy-mm-dd
   };
 
   return (
@@ -114,7 +113,7 @@ export default function TransactionsPage() {
           editingTransaction
             ? {
                 amount: editingTransaction.amount,
-                date: new Date(editingTransaction.date), // ✅ FIXED: convert string to Date
+                date: formatDate(editingTransaction.date), // ✅ formatted string like "2024-09-01"
                 description: editingTransaction.description,
                 category: editingTransaction.category,
                 type: editingTransaction.type,
