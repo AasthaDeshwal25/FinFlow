@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
-  Loader2, TrendingUp, PieChart, BarChart3, Plus, ArrowUp, ArrowDown, Target
+  Loader2, TrendingUp, PieChart, BarChart3, Plus,
+  ArrowUp, ArrowDown, Target
 } from "lucide-react";
+
 import ExpenseChart from "@/components/Charts/ExpenseChart";
 import CategoryChart from "@/components/Charts/CategoryChart";
 import BudgetChart from "@/components/Charts/BudgetChart";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 interface Transaction {
   id: string;
@@ -23,7 +25,8 @@ interface Transaction {
 }
 
 interface Budget {
-  _id: string;
+  id: string;
+  _id?: string;
   category: string;
   amount: number;
   period: 'monthly' | 'yearly';
@@ -55,7 +58,6 @@ export default function AnalyticsPage() {
       }
 
       const transactionsData = await transactionsResponse.json();
-
       const transactionsArray = Array.isArray(transactionsData)
         ? transactionsData
         : transactionsData?.transactions || transactionsData?.data || [];
@@ -73,7 +75,17 @@ export default function AnalyticsPage() {
         const budgetsArray = Array.isArray(budgetsData)
           ? budgetsData
           : budgetsData?.budgets || budgetsData?.data || [];
-        setBudgets(budgetsArray);
+
+        const mappedBudgets: Budget[] = budgetsArray.map((b: any, index: number) => ({
+          id: b._id || b.id || `budget-${index}`,
+          _id: b._id,
+          category: b.category,
+          amount: b.amount,
+          period: b.period,
+          createdAt: b.createdAt || new Date().toISOString(),
+        }));
+
+        setBudgets(mappedBudgets);
       } else {
         setBudgets([]);
       }
@@ -94,7 +106,6 @@ export default function AnalyticsPage() {
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   const totalBudget = budgets.reduce((sum, b) => sum + (b.amount || 0), 0);
-
   const netBalance = totalIncome - totalExpenses;
 
   const budgetUsage = budgets.map((budget) => {
@@ -155,9 +166,7 @@ export default function AnalyticsPage() {
           <div className="text-center max-w-md">
             <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-600 mb-2">No Analytics Data Available</h3>
-            <p className="text-gray-500 mb-6">
-              You need to add some transactions first to see your analytics and spending patterns.
-            </p>
+            <p className="text-gray-500 mb-6">Add some transactions to see analytics.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
                 <Link href="/transactions/add">
