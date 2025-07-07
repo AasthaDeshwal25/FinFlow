@@ -7,6 +7,8 @@ import { Loader2, TrendingUp, PieChart, BarChart3 } from "lucide-react";
 import ExpenseChart from "@/components/Charts/ExpenseChart";
 import CategoryChart from "@/components/Charts/CategoryChart";
 import BudgetChart from "@/components/Charts/BudgetChart";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface Transaction {
   id: string;
@@ -57,17 +59,20 @@ export default function AnalyticsPage() {
       console.log('transactionsData:', transactionsData);
       console.log('budgetsData:', budgetsData);
 
-      // Handle both array and {data: []}
       const transactionsArray = Array.isArray(transactionsData)
         ? transactionsData
         : transactionsData?.data ?? [];
-
       const budgetsArray = Array.isArray(budgetsData)
         ? budgetsData
         : budgetsData?.data ?? [];
 
-      setTransactions(transactionsArray);
-      setBudgets(budgetsArray);
+      if (transactionsArray.length === 0) {
+        setTransactions([]);
+        setBudgets([]);
+      } else {
+        setTransactions(transactionsArray);
+        setBudgets(budgetsArray);
+      }
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load analytics data. Please try again.');
@@ -76,7 +81,12 @@ export default function AnalyticsPage() {
     }
   };
 
-  // Calculate summary stats safely
+  useEffect(() => {
+    const handleRouteChange = () => fetchData();
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
+
   const totalExpenses = (transactions || [])
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -112,7 +122,23 @@ export default function AnalyticsPage() {
       <div className="container mx-auto p-4">
         <Alert className="max-w-md mx-auto">
           <AlertDescription>{error}</AlertDescription>
+          <Button onClick={fetchData} className="mt-2">Retry</Button>
         </Alert>
+      </div>
+    );
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <div className="container mx-auto p-4 min-h-[400px] flex items-center justify-center">
+        <div className="text-center">
+          <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-600 mb-2">No Data Available</h3>
+          <p className="text-gray-500 mb-4">Add some transactions to see your analytics and spending patterns.</p>
+          <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Link href="/transactions/add">Add Transaction</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -233,9 +259,12 @@ export default function AnalyticsPage() {
             <CardContent className="text-center py-12">
               <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-600 mb-2">No Data Available</h3>
-              <p className="text-gray-500">
+              <p className="text-gray-500 mb-4">
                 Add some transactions to see your analytics and spending patterns.
               </p>
+              <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Link href="/transactions/add">Add Transaction</Link>
+              </Button>
             </CardContent>
           </Card>
         )}

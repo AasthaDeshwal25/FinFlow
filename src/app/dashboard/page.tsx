@@ -87,15 +87,27 @@ export default function Dashboard() {
         : Array.isArray(transactionsData)
           ? transactionsData
           : [];
-
       const budgetsArray = Array.isArray(budgetsData.budgets)
         ? budgetsData.budgets
         : Array.isArray(budgetsData)
           ? budgetsData
           : [];
 
-      const dashboardStats = calculateDashboardStats(transactionsArray, budgetsArray);
-      setStats(dashboardStats);
+      if (transactionsArray.length === 0) {
+        setStats({
+          totalIncome: 0,
+          totalExpenses: 0,
+          netBalance: 0,
+          monthlyIncome: 0,
+          monthlyExpenses: 0,
+          budgetStatus: { totalBudget: 0, totalSpent: 0, percentage: 0, overBudgetCategories: 0 },
+          recentTransactions: [],
+          topCategories: []
+        });
+      } else {
+        const dashboardStats = calculateDashboardStats(transactionsArray, budgetsArray);
+        setStats(dashboardStats);
+      }
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError('Failed to load dashboard data. Please try again.');
@@ -103,6 +115,12 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handleRouteChange = () => fetchDashboardData();
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
 
   const calculateDashboardStats = (transactions: Transaction[], budgets: Budget[]): DashboardStats => {
     const now = new Date();
@@ -208,13 +226,25 @@ export default function Dashboard() {
         <Alert className="max-w-md mx-auto">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
+          <Button onClick={fetchDashboardData} className="mt-2">Retry</Button>
         </Alert>
       </div>
     );
   }
 
-  if (!stats) {
-    return <div className="container mx-auto p-6">No data available</div>;
+  if (!stats || (!stats.recentTransactions.length && !stats.topCategories.length)) {
+    return (
+      <div className="container mx-auto p-6 min-h-[400px] flex items-center justify-center">
+        <div className="text-center">
+          <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">No data available</p>
+          <p className="text-gray-500 mb-4">Start by adding your first transaction!</p>
+          <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Link href="/transactions/add">Add Transaction</Link>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -404,15 +434,15 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Button asChild className="h-auto p-4 bg-emerald-600 hover:bg-emerald-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Button asChild className="h-auto p-4 bg-emerald-600 hover:bg-emerald-700 text-white">
             <Link href="/transactions/add" className="flex flex-col items-center gap-2">
               <TrendingUp className="w-6 h-6" />
               <span>Add Transaction</span>
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-auto p-4">
-            <Link href="/budgets" className="flex flex-col items-center gap-2">
+            <Link href="/src/components/budgetform" className="flex flex-col items-center gap-2">
               <Target className="w-6 h-6" />
               <span>Manage Budgets</span>
             </Link>
@@ -421,12 +451,6 @@ export default function Dashboard() {
             <Link href="/analytics" className="flex flex-col items-center gap-2">
               <TrendingUp className="w-6 h-6" />
               <span>View Analytics</span>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="h-auto p-4">
-            <Link href="/reports" className="flex flex-col items-center gap-2">
-              <Calendar className="w-6 h-6" />
-              <span>Generate Report</span>
             </Link>
           </Button>
         </div>
