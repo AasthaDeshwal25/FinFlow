@@ -133,7 +133,11 @@ export default function TransactionsPage() {
             <p className="mt-4 text-gray-600">Loading transactions...</p>
           </div>
         ) : (
-          c
+          <TransactionList
+            transactions={transactions}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         )}
       </div>
     </div>
