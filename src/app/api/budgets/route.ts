@@ -1,87 +1,203 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb";
-import { Budget } from "@/types";
-import { ObjectId } from "mongodb";
+import { NextRequest, NextResponse } from 'next/server';
+import { MongoClient, ObjectId } from 'mongodb';
 
+const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/finflow';
+const client = new MongoClient(uri);
+
+async function connectToDatabase() {
+  try {
+    await client.connect();
+    return client.db('finflow');
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error);
+    throw error;
+  }
+}
+
+// GET - Fetch all budgets
 export async function GET() {
   try {
-    const db = await connectDB();
-    const budgets = await db.collection("budgets").find({}).toArray();
-    return NextResponse.json(budgets);
+    const db = await connectToDatabase();
+    const budgets = await db
+      .collection('budgets')
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    
+    return NextResponse.json({
+      success: true,
+      budgets: budgets
+    });
   } catch (error) {
-    console.error("Error fetching budgets:", error);
-    return NextResponse.json({ error: "Failed to fetch budgets" }, { status: 500 });
+    console.error('Error fetching budgets:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch budgets' },
+      { status: 500 }
+    );
   }
 }
 
-export async function POST(request: Request) {
+// POST - Create new budget
+export async function POST(request: NextRequest) {
   try {
-    const db = await connectDB();
-    const data: Omit<Budget, "_id"> = await request.json();
+    const data = await request.json();
     
-    // Add timestamp
-    const budgetData = {
-      ...data,
-      createdAt: new Date().toISOString(),
-    };
-    
-    const result = await db.collection("budgets").insertOne(budgetData);
-    return NextResponse.json({ _id: result.insertedId, ...budgetData });
-  } catch (error) {
-    console.error("Error adding budget:", error);
-    return NextResponse.json({ error: "Failed to add budget" }, { status: 500 });
-  }
-}
-
-export async function PUT(request: Request) {
-  try {
-    const db = await connectDB();
-    const { _id, ...data }: Budget = await request.json();
-
-    if (!_id) {
-      return NextResponse.json({ error: "Missing _id" }, { status: 400 });
+    // Validate required fields
+    if (!data.category || !data.amount) {
+      return NextResponse.json(
+        { error: 'Missing required fields: category and amount' },
+        { status: 400 }
+      );
     }
 
-    const objectId = new ObjectId(_id);
+    // Validate amount
+    if (parseFloat(data.amount) <= 0) {
+      return NextResponse.json(
+        { error: 'Amount must be greater than 0' },
+        { status: 400 }
+      );
+    }
 
-    // Update with timestamp
+    const db = await connectToDatabase();
+    
+    // Check if budget already exists for this category
+    const existingBudget = await db.collection('budgets').findOne({
+      category: data.category
+    });
+
+    if (existingBudget) {
+      // Update existing budget
+      const result = await db.collection('budgets').updateOne(
+        { category: data.category },
+        { 
+          $set: {
+            amount: parseFloat(data.amount),
+            period: data.period || 'monthly',
+            updatedAt: new Date()
+          }
+        }
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: 'Budget updated successfully',
+        updated: true
+      });
+    } else {
+      // Create new budget
+      const budget = {
+        category: data.category,
+        amount: parseFloat(data.amount),
+        period: data.period || 'monthly',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const result = await db.collection('budgets').insertOne(budget);
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Budget created successfully',
+        budget: { ...budget, _id: result.insertedId }
+      });
+    }
+  } catch (error) {
+    console.error('Error creating/updating budget:', error);
+    return NextResponse.json(
+      { error: 'Failed to create/update budget' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update budget
+export async function PUT(request: NextRequest) {
+  try {
+    const data = await request.json();
+    
+    if (!data._id) {
+      return NextResponse.json(
+        { error: 'Budget ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate amount
+    if (data.amount && parseFloat(data.amount) <= 0) {
+      return NextResponse.json(
+        { error: 'Amount must be greater than 0' },
+        { status: 400 }
+      );
+    }
+
+    const db = await connectToDatabase();
+    
     const updateData = {
-      ...data,
-      updatedAt: new Date().toISOString(),
+      category: data.category,
+      amount: parseFloat(data.amount),
+      period: data.period || 'monthly',
+      updatedAt: new Date()
     };
 
-    await db.collection("budgets").updateOne(
-      { _id: objectId },
+    const result = await db.collection('budgets').updateOne(
+      { _id: new ObjectId(data._id) },
       { $set: updateData }
     );
 
-    return NextResponse.json({ message: "Budget updated successfully" });
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { error: 'Budget not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Budget updated successfully'
+    });
   } catch (error) {
-    console.error("Error updating budget:", error);
-    return NextResponse.json({ error: "Failed to update budget" }, { status: 500 });
+    console.error('Error updating budget:', error);
+    return NextResponse.json(
+      { error: 'Failed to update budget' },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(request: Request) {
+// DELETE - Delete budget
+export async function DELETE(request: NextRequest) {
   try {
-    const db = await connectDB();
-    const { _id } = await request.json();
-
-    if (!_id) {
-      return NextResponse.json({ error: "Missing _id" }, { status: 400 });
+    const data = await request.json();
+    
+    if (!data._id) {
+      return NextResponse.json(
+        { error: 'Budget ID is required' },
+        { status: 400 }
+      );
     }
 
-    const objectId = new ObjectId(_id);
-
-    const result = await db.collection("budgets").deleteOne({ _id: objectId });
+    const db = await connectToDatabase();
+    
+    const result = await db.collection('budgets').deleteOne({
+      _id: new ObjectId(data._id)
+    });
 
     if (result.deletedCount === 0) {
-      return NextResponse.json({ error: "Budget not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Budget not found' },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json({ message: "Budget deleted successfully" });
+    return NextResponse.json({
+      success: true,
+      message: 'Budget deleted successfully'
+    });
   } catch (error) {
-    console.error("Error deleting budget:", error);
-    return NextResponse.json({ error: "Failed to delete budget" }, { status: 500 });
+    console.error('Error deleting budget:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete budget' },
+      { status: 500 }
+    );
   }
 }

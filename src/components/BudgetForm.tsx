@@ -35,9 +35,10 @@ export default function BudgetForm() {
     try {
       const response = await fetch("/api/budgets");
       const data = await response.json();
-      setBudgets(data);
+      setBudgets(Array.isArray(data) ? data : []); // Ensure budgets is always an array
     } catch (error) {
       console.error("Error fetching budgets:", error);
+      setBudgets([]); // Default to empty array on error
     }
   };
 
@@ -107,9 +108,11 @@ export default function BudgetForm() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -151,7 +154,6 @@ export default function BudgetForm() {
               <div className="space-y-2">
                 <Label htmlFor="amount">Budget Amount</Label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     id="amount"
                     type="number"

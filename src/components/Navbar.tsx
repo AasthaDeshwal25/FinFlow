@@ -26,10 +26,7 @@ export default function Navbar() {
           </div>
 
           {/* Navigation Links */}
-          <div className="flex items-center space-x-6">
-            <Link href="/dashboard" className="relative text-white hover:text-gold-300 transition-colors duration-200 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-gold-300 after:transition-all after:duration-300 hover:after:w-full">
-              Dashboard
-            </Link>
+          <div className="flex items-center space-x-6">           
             <Link href="/transactions" className="relative text-white hover:text-gold-300 transition-colors duration-200 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-gold-300 after:transition-all after:duration-300 hover:after:w-full">
               Transactions
             </Link>

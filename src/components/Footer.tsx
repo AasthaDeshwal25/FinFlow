@@ -26,11 +26,6 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="flex flex-wrap gap-4">
               <li>
-                <Link href="/dashboard" className="text-gray-300 hover:text-emerald-300 transition-colors text-sm">
-                  Dashboard
-                </Link>
-              </li>
-              <li>
                 <Link href="/transactions" className="text-gray-300 hover:text-emerald-300 transition-colors text-sm">
                   Transactions
                 </Link>

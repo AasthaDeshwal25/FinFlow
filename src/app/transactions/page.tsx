@@ -97,12 +97,16 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold text-emerald-700 mb-4">Transactions</h1>
+    <div className="container mx-auto p-4 space-y-8">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-emerald-700 mb-2">Transaction Management</h1>
+        <p className="text-gray-600">Track your income and expenses with detailed categorization</p>
+      </div>
 
       {editingTransaction && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h2 className="text-lg font-semibold text-blue-800 mb-2">Edit Transaction</h2>
+          <p className="text-blue-600">You are currently editing: {editingTransaction.description}</p>
         </div>
       )}
 
@@ -114,6 +118,7 @@ export default function TransactionsPage() {
                 date: editingTransaction.date,
                 description: editingTransaction.description,
                 category: editingTransaction.category,
+                type: editingTransaction.type,
               }
             : undefined
         }
@@ -122,9 +127,12 @@ export default function TransactionsPage() {
       />
 
       <div className="mt-8">
-        <h2 className="text-xl font-semibold text-emerald-700 mb-4">Transaction History</h2>
+        <h2 className="text-2xl font-semibold text-emerald-700 mb-4">Transaction History</h2>
         {isLoading ? (
-          <div className="text-center py-4">Loading transactions...</div>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading transactions...</p>
+          </div>
         ) : (
           <TransactionList
             transactions={transactions}
