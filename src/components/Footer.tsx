@@ -3,9 +3,10 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-800 text-white py-6 sticky-footer">
+    <footer className="bg-gray-800 text-white py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Top section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Company Info */}
           <div>
             <div className="flex items-center mb-4">
@@ -14,7 +15,7 @@ export default function Footer() {
               </div>
               <span className="text-xl font-bold">FinFlow</span>
             </div>
-            <p className="text-gray-300 text-sm mb-4">
+            <p className="text-gray-300 text-sm">
               Empowering individuals to take control of their financial future 
               through intelligent tracking, insightful analytics, and AI-powered advice.
             </p>
@@ -23,7 +24,7 @@ export default function Footer() {
           {/* Quick Links */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2">
+            <ul className="flex flex-wrap gap-4">
               <li>
                 <Link href="/dashboard" className="text-gray-300 hover:text-emerald-300 transition-colors text-sm">
                   Dashboard
@@ -46,12 +47,13 @@ export default function Footer() {
               </li>
             </ul>
           </div>
+        </div>
 
-          <div className="border-t border-gray-700 mt-8 pt-8 text-center">
-            <p className="text-sm text-gray-400">
-              © 2025 FinFlow. All rights reserved.
-            </p>
-          </div>
+        {/* Bottom section */}
+        <div className="border-t border-gray-700 pt-4 text-center">
+          <p className="text-sm text-gray-400">
+            © 2025 FinFlow. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
