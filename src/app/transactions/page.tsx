@@ -1,14 +1,19 @@
+// TransactionPage.tsx
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Transaction } from "@/types";
 import TransactionForm from "@/components/TransactionForm";
 import TransactionList from "@/components/TransactionList";
-import { Transaction } from "@/types";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import axios from "axios";
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchTransactions();
@@ -16,129 +21,96 @@ export default function TransactionsPage() {
 
   const fetchTransactions = async () => {
     try {
-      setIsLoading(true);
-      const response = await fetch("/api/transactions");
-      const data = await response.json();
-
-      setTransactions(Array.isArray(data.transactions) ? data.transactions : []);
+      const response = await axios.get("/api/transactions");
+      setTransactions(response.data.transactions || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
-      setTransactions([]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleSubmit = async (data: any) => {
-    try {
-      let response;
-      if (editingTransaction) {
-        response = await fetch("/api/transactions", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ _id: editingTransaction._id, ...data }),
-        });
-      } else {
-        response = await fetch("/api/transactions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
-        });
-      }
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Failed to save transaction");
-
-      setEditingTransaction(null);
-      await fetchTransactions();
-      alert(editingTransaction ? "Transaction updated successfully!" : "Transaction added successfully!");
-    } catch (error) {
-      console.error("Error saving transaction:", error);
-      alert(`Failed to save transaction: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
+  const handleAdd = () => {
+    setEditingTransaction(null);
+    setShowForm(true);
   };
 
   const handleEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingTransaction(null);
+    setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this transaction?")) {
-      try {
-        const response = await fetch("/api/transactions", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ _id: id }),
-        });
-
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || "Failed to delete transaction");
-
-        await fetchTransactions();
-        alert("Transaction deleted successfully!");
-      } catch (error) {
-        console.error("Error deleting transaction:", error);
-        alert(`Failed to delete transaction: ${error instanceof Error ? error.message : "Unknown error"}`);
-      }
+    try {
+      await axios.delete(`/api/transactions/${id}`);
+      setTransactions(transactions.filter((t) => t.id !== id));
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
     }
   };
 
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    const iso = date.toISOString();
-    return iso.slice(0, 10); // yyyy-mm-dd
+  const handleSubmit = async (data: {
+    amount: number;
+    date: Date;
+    description: string;
+    category: string;
+    type: "credit" | "debit";
+  }) => {
+    try {
+      if (editingTransaction) {
+        const response = await axios.put(`/api/transactions/${editingTransaction._id}`, {
+          ...data,
+        });
+        fetchTransactions();
+      } else {
+        const response = await axios.post("/api/transactions", {
+          ...data,
+        });
+        fetchTransactions();
+      }
+      setShowForm(false);
+      setEditingTransaction(null);
+    } catch (error) {
+      console.error("Error saving transaction:", error);
+    }
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-emerald-700 mb-2">Transaction Management</h1>
-        <p className="text-gray-600">Track your income and expenses with detailed categorization</p>
-      </div>
-
-      {editingTransaction && (
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h2 className="text-lg font-semibold text-blue-800 mb-2">Edit Transaction</h2>
-          <p className="text-blue-600">You are currently editing: {editingTransaction.description}</p>
-        </div>
-      )}
-
-      <TransactionForm
-        defaultValues={
-          editingTransaction
-            ? {
-                amount: editingTransaction.amount,
-                date: formatDate(editingTransaction.date), // ✅ formatted string like "2024-09-01"
-                description: editingTransaction.description,
-                category: editingTransaction.category,
-                type: editingTransaction.type,
-              }
-            : undefined
-        }
-        onSubmit={handleSubmit}
-        onCancel={editingTransaction ? handleCancelEdit : undefined}
-      />
-
-      <div className="mt-8">
-        <h2 className="text-2xl font-semibold text-emerald-700 mb-4">Transaction History</h2>
-        {isLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading transactions...</p>
-          </div>
-        ) : (
-          <TransactionList
-            transactions={transactions}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Transactions</h1>
+        {!showForm && (
+          <Button onClick={handleAdd} className="flex items-center gap-2">
+            <PlusCircle className="w-4 h-4" />
+            Add Transaction
+          </Button>
         )}
       </div>
+
+      {showForm ? (
+        <TransactionForm
+          defaultValues={
+            editingTransaction
+              ? {
+                  amount: editingTransaction.amount,
+                  date: editingTransaction.date.split("T")[0],
+                  description: editingTransaction.description,
+                  category: editingTransaction.category,
+                  type: editingTransaction.type,
+                }
+              : undefined
+          }
+          onSubmit={handleSubmit}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingTransaction(null);
+          }}
+        />
+      ) : (
+        <TransactionList
+          transactions={transactions}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 }

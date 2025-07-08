@@ -1,24 +1,23 @@
+// types.ts
+
 export interface Transaction {
   id: string;
   _id?: string;
   amount: number;
   category: string;
   description: string;
-  date: string;
-  type: 'credit' | 'debit'; 
+  date: string; // stored as ISO string
+  type: "credit" | "debit";
   createdAt?: string;
   updatedAt?: string;
 }
-
-
-
 
 export interface Budget {
   id: string;
   _id?: string;
   category: string;
   amount: number;
-  period: 'monthly' | 'yearly';
+  period: "monthly" | "yearly";
   createdAt: string;
   updatedAt?: string;
 }
@@ -45,7 +44,7 @@ export interface DashboardStats {
     overBudgetCategories: number;
   };
   recentTransactions: Transaction[];
-  topCategories: { category: string; amount: number; }[];
+  topCategories: { category: string; amount: number }[];
 }
 
 export interface BudgetComparison {
@@ -53,7 +52,7 @@ export interface BudgetComparison {
   budget: number;
   actual: number;
   percentage: number;
-  status: 'good' | 'warning' | 'over';
+  status: "good" | "warning" | "over";
 }
 
 export interface MonthlyData {
