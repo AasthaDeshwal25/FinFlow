@@ -1,5 +1,3 @@
-// TransactionForm.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -21,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { categories } from "@/data/categories";
 
+// ✅ Update: `date` is now a string (not Date)
 interface TransactionFormProps {
   defaultValues?: {
     amount: number;
@@ -31,7 +30,7 @@ interface TransactionFormProps {
   };
   onSubmit: (data: {
     amount: number;
-    date: Date;
+    date: string;
     description: string;
     category: string;
     type: "credit" | "debit";
@@ -68,7 +67,7 @@ export default function TransactionForm({
       const submitData = {
         ...formData,
         amount: parseFloat(formData.amount.toString()),
-        date: new Date(formData.date), // Convert to Date object
+        date: formData.date, // ✅ keep as string now
       };
 
       await onSubmit(submitData);

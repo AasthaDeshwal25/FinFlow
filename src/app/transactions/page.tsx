@@ -1,4 +1,4 @@
-// TransactionPage.tsx
+// Transaction/page.tsx
 
 "use client";
 
@@ -48,30 +48,32 @@ export default function TransactionsPage() {
   };
 
   const handleSubmit = async (data: {
-    amount: number;
-    date: Date;
-    description: string;
-    category: string;
-    type: "credit" | "debit";
-  }) => {
-    try {
-      if (editingTransaction) {
-        const response = await axios.put(`/api/transactions/${editingTransaction._id}`, {
-          ...data,
-        });
-        fetchTransactions();
-      } else {
-        const response = await axios.post("/api/transactions", {
-          ...data,
-        });
-        fetchTransactions();
-      }
-      setShowForm(false);
-      setEditingTransaction(null);
-    } catch (error) {
-      console.error("Error saving transaction:", error);
+  amount: number;
+  date: string;
+  description: string;
+  category: string;
+  type: "credit" | "debit";
+}) => {
+  try {
+    const payload = {
+      ...data,
+      date: new Date(data.date).toISOString(), // 👈 ensure it's stored as ISO string
+    };
+
+    if (editingTransaction) {
+      await axios.put(`/api/transactions/${editingTransaction._id}`, payload);
+    } else {
+      await axios.post("/api/transactions", payload);
     }
-  };
+
+    fetchTransactions();
+    setShowForm(false);
+    setEditingTransaction(null);
+  } catch (error) {
+    console.error("Error saving transaction:", error);
+  }
+};
+
 
   return (
     <div className="container mx-auto py-8 px-4">
